@@ -48,23 +48,59 @@ var canvas1 = document.getElementById("map");
 var cxt = canvas1.getContext("2d");
 
 
+//定义炸弹
+var bombs = new Array();
 //0:up 1:right 2:down 3:left
 var hero =new Hero(40,370,0,heroColor);
+var heroBullets=new Array();
 
 var enemyTanks=new Array();
+var enemyBullets = new Array();
 for(var i= 0;i<3;i++){
     var enemyTank=new EnemyTanke((i+1)*50,0,2,enemyColor);
     enemyTanks[i]=enemyTank;
+    //draw(enemyTanks[i]);
+    //让敌人的坦克动起来
+    var timer = window.setInterval("enemyTanks["+i+"].run()",50);
+    enemyTanks[i].timer = timer;
+    //让敌人发射子弹
+    var enemyBullet = new Bullet(enemyTanks[i].x+9,enemyTanks[i].y+30,enemyTanks[i].direct,enemyTanks[i],'enemy');
+    enemyBullets.push(enemyBullet);
+    enemyBullets[i].timer = window.setInterval("enemyBullets["+i+"].run()",50);
 }
 
+if(hero.isLive){
+    draw(hero);
+}
+
+
 flashMap();
+
 //定时刷新
 function flashMap(){
     cxt.clearRect(0,0,400,400);
-    draw(hero);
-    for(var i= 0;i<3;i++){
-        draw(enemyTanks[i]);
+    isHitHeroTank(enemyBullets,hero);
+    if(hero.isLive){
+        draw(hero);
     }
+    isHitEnemyTank(heroBullets,enemyTanks);
+    drawHeroBullet(heroBullets);
+    drawEnemyBullet(enemyBullets,enemyTanks);
+    for(var i= 0;i<3;i++) {
+        if (enemyTanks[i].isLive) {
+            draw(enemyTanks[i]);
+        }
+    }
+        for(var k=0;k<bombs.length;k++){
+            var img1 = new Image();
+            img1.src = '1.jpg';
+            var x = bombs[k].x;
+            var y = bombs[k].y;
+            img1.load=function(){
+                cxt.drawImage(img1,x,y,30,30);
+            }
+            bombs.splice(k,1);
+        }
 }
 
 
@@ -83,7 +119,11 @@ function test() {
         case 65:
             hero.moveLeft();
             break;
+        case 74:
+            hero.shotEnemy();
+            break;
     }
     flashMap();
 }
 
+window.setInterval("flashMap()",100);
